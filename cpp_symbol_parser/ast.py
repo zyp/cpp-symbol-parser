@@ -1,14 +1,14 @@
 from dataclasses import dataclass, field
 from typing import List
 
-@dataclass
+@dataclass(frozen = True)
 class BuiltinType:
     name: str
 
     def __str__(self):
         return self.name
 
-@dataclass
+@dataclass(frozen = True)
 class Array:
     type: BuiltinType # TODO: any type
     count: int
@@ -16,7 +16,7 @@ class Array:
     def __str__(self):
         return f'({self.type!s} [{self.count}])'
 
-@dataclass
+@dataclass(frozen = True)
 class Literal:
     type: BuiltinType
     value: int
@@ -24,20 +24,20 @@ class Literal:
     def __str__(self):
         return f'({self.type!s}){self.value}'
 
-@dataclass
+@dataclass(frozen = True)
 class AggregateInit:
     type: any # TODO
-    values: any # TODO
+    values: tuple[any] # TODO
 
     def __str__(self):
         values = ', '.join(str(v) for v in self.values)
         return f'{self.type!s} {{{values}}}'
 
-@dataclass
+@dataclass(frozen = True)
 class Function:
-    name: any # TODO
+    name: 'Name'
     return_type: any # TODO
-    argument_types: any # TODO
+    argument_types: tuple[any] # TODO
 
     def __str__(self):
         args = ', '.join(str(a) for a in self.argument_types)
@@ -48,11 +48,11 @@ class Function:
 
         return signature
 
-@dataclass
+@dataclass(frozen = True)
 class Name:
     name: str
-    parent: any = None # TODO
-    template_args: any = None # TODO
+    parent: 'Name | None' = None
+    template_args: tuple[any] = None # TODO
 
     def __str__(self):
         s = self.name
@@ -65,3 +65,19 @@ class Name:
             s = f'{s}<{args}>'
 
         return s
+
+    def __contains__(self, item):
+        match item:
+            case Name():
+                return item.parent == self
+            case Function():
+                return item.name.parent == self
+
+        return False
+
+    @classmethod
+    def from_string(cls, str):
+        res = None
+        for element in str.split('::'):
+            res = cls(element, res)
+        return res

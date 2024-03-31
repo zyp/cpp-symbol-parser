@@ -94,7 +94,7 @@ class AstTransform(Transformer_InPlaceRecursive):
         return_type, *argument_types = (None, *types) if name.template_args is None else types
         if argument_types == [BuiltinType('void')]:
             argument_types = []
-        return Function(name, return_type, argument_types)
+        return Function(name, return_type, tuple(argument_types))
 
     def unqualified_name(self, name):
         assert isinstance(name, Name) == False
@@ -111,7 +111,7 @@ class AstTransform(Transformer_InPlaceRecursive):
                 return name
 
     def template(self, name, template_args):
-        return replace(name, template_args = template_args)
+        return replace(name, template_args = tuple(template_args))
 
     def _fold(self, child):
         return child
