@@ -26,6 +26,13 @@ class SubstitutionTransform(Interpreter):
             case _:
                 assert False # TODO
 
+    def _is_template(self, tree):
+        if not isinstance(tree, Tree):
+            return False
+        if tree.data == 'template':
+            return True
+        return any(self._is_template(child) for child in tree.children)
+
     def _substitutable(self, tree):
         match tree.children[0].data:
             case 'builtin_type':
@@ -33,6 +40,9 @@ class SubstitutionTransform(Interpreter):
 
             case 'substitution':
                 tree.children = self._get_substitution(tree.children[0].children[0])
+
+            case 'class_enum_type' if not self._is_template(tree):
+                self.visit_children(tree)
 
             case _:
                 self.visit_children(tree)
